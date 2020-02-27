@@ -51,15 +51,33 @@ def separate_spam(dataset):
     return spam_set, nonspam_set
 
 
-# def classifier(data_to_classify, dataset):
-#     spam_set, nonspam_set = separate_spam(dataset)
-#     spam_mean, spam_std = calc_mean_stddev(spam_set)
-#     nonspam_mean, nonspam_std = calc_mean_stddev(nonspam_set)
-#     spam_prior, nonspam_prior = calc_prior(dataset)
-#
-#     # Loop through all attributes and calculate probabilities
-#     for feature in range(0, len(dataset[0])-1):
+def classifier(data_to_classify, dataset):
+    spam_set, nonspam_set = separate_spam(dataset)
+    spam_mean, spam_std = calc_mean_stddev(spam_set)
+    nonspam_mean, nonspam_std = calc_mean_stddev(nonspam_set)
+    spam_prior, nonspam_prior = calc_prior(dataset)
 
+    # Loop through all attributes and calculate probabilities
+    spam_prob_list = []
+    for feature in range(0, len(spam_set[0])-1):
+        spam_prob_list.append(math_calculation(data_to_classify[feature], spam_mean[feature], spam_std[feature]))
+
+    nonspam_prob_list = []
+    for feature in range(0, len(nonspam_set[0])-1):
+        nonspam_prob_list.append(math_calculation(data_to_classify[feature], nonspam_mean[feature], nonspam_std[feature]))
+
+    total_spam_prob = np.log10(spam_prior)
+    for item in range(0, len(spam_prob_list)):
+        total_spam_prob += np.log10(spam_prob_list[item])
+
+    total_nonspam_prob = np.log10(nonspam_prior)
+    for item in range(0, len(nonspam_prob_list)):
+        total_nonspam_prob += np.log10(nonspam_prob_list[item])
+
+    if(total_spam_prob >= total_nonspam_prob):
+        return 1
+    else:
+        return 0
 
 def math_calculation(value, mean, std):
     first_value = (1/(np.sqrt(2*np.pi)*std))
@@ -95,13 +113,6 @@ for i in range(1812, 3206):
 for i in range(3206, 4600):
     test_data.append(data[i])
 
-# count_spam(training_data, 'Training Data')
-# # count_spam(test_data, 'Test Data')
-
-# Make 2 Separate Classes, 1 for spam, 1 for non-spam,
-# then loop through all the attributes of each and calculate mean and stddev
-
-train_spam, train_non_spam = separate_spam(training_data)
 
 testset = [
     [3.0, 5.1, 1],
@@ -127,13 +138,5 @@ test_set_neg = [
 testmeanpos, teststdpos = calc_mean_stddev(test_set_pos)
 testmeanneg, teststdneg = calc_mean_stddev(test_set_neg)
 
-# print(testmeanpos)
-# print(teststdpos)
-# print()
-# print(testmeanneg)
-# print(teststdneg)
-# testspamprior, testnonspamprior = calc_prior(testset)
-# print(testspamprior, testnonspamprior)
-
-num = math_calculation(6.3, 4.2, 3.7)
-print(num)
+testclass = classifier([5.2, 6.3], testset)
+print(testclass)
