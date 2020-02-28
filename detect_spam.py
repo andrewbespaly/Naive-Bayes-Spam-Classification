@@ -48,7 +48,13 @@ def separate_spam(dataset):
             spam_set.append(dataset[i])
         else:
             nonspam_set.append(dataset[i])
-    return spam_set, nonspam_set
+    return spam_set, nonspam_set\
+
+
+def create_matrix(list):
+    print('Pred|Act Spam\tNonSpam')
+    print('Spam\t', list[0], '\t', list[1])
+    print('NonSpam\t', list[2], '\t', list[3])
 
 
 def classifier(data_to_classify, dataset):
@@ -66,12 +72,19 @@ def classifier(data_to_classify, dataset):
     for feature in range(0, len(nonspam_set[0])-1):
         nonspam_prob_list.append(math_calculation(data_to_classify[feature], nonspam_mean[feature], nonspam_std[feature]))
 
+    if(spam_prior == 0):
+        spam_prior = 10**-10
     total_spam_prob = np.log10(spam_prior)
+
     for item in range(0, len(spam_prob_list)):
+        if(spam_prob_list[item]==0):
+            spam_prob_list[item] = 10**-10
         total_spam_prob += np.log10(spam_prob_list[item])
 
     total_nonspam_prob = np.log10(nonspam_prior)
     for item in range(0, len(nonspam_prob_list)):
+        if (nonspam_prob_list[item] == 0):
+            nonspam_prob_list[item] = 10 ** -10
         total_nonspam_prob += np.log10(nonspam_prob_list[item])
 
     if(total_spam_prob >= total_nonspam_prob):
@@ -114,29 +127,51 @@ for i in range(3206, 4600):
     test_data.append(data[i])
 
 
-testset = [
-    [3.0, 5.1, 1],
-    [4.1, 6.3, 1],
-    [7.2, 9.8, 1],
-    [2.0, 1.1, 0],
-    [4.1, 2.0, 0],
-    [8.1, 9.4, 0]
-]
+# testset = [
+#     [3.0, 5.1, 1],
+#     [4.1, 6.3, 1],
+#     [7.2, 9.8, 1],
+#     [2.0, 1.1, 0],
+#     [4.1, 2.0, 0],
+#     [8.1, 9.4, 0]
+# ]
+#
+# test_set_pos = [
+#     [3.0, 5.1, 1],
+#     [4.1, 6.3, 1],
+#     [7.2, 9.8, 1]
+# ]
+#
+# test_set_neg = [
+#     [2.0, 1.1, 0],
+#     [4.1, 2.0, 0],
+#     [8.1, 9.4, 0]
+# ]
+# testclass = classifier([5.2, 6.3, 1], testset)
+# print(testclass)
 
-test_set_pos = [
-    [3.0, 5.1, 1],
-    [4.1, 6.3, 1],
-    [7.2, 9.8, 1]
-]
+test_correct = 0
 
-test_set_neg = [
-    [2.0, 1.1, 0],
-    [4.1, 2.0, 0],
-    [8.1, 9.4, 0]
-]
+confusion_matrix = np.zeros((4))  # 0: spam-spam, 1: spam-nonspam, 2: nonspam-spam, 3:nonspam-nonspam, --actual-predicted
+for row in range(0, len(test_data)):
+    prediction = classifier(test_data[row], training_data)
+    if(prediction == test_data[row][-1]):
+        test_correct += 1
+        if(prediction == 1):
+            confusion_matrix[0] += 1
+        else:
+            confusion_matrix[3] += 1
+    else:
+        if(prediction == 1):
+            confusion_matrix[2] += 1
+        else:
+            confusion_matrix[1] += 1
 
-testmeanpos, teststdpos = calc_mean_stddev(test_set_pos)
-testmeanneg, teststdneg = calc_mean_stddev(test_set_neg)
 
-testclass = classifier([5.2, 6.3], testset)
-print(testclass)
+create_matrix(confusion_matrix)
+
+print()
+print(test_correct, '/', len(test_data))
+test_accuracy = (test_correct / len(test_data)) * 100
+print(test_accuracy)
+
