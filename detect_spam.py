@@ -1,6 +1,8 @@
 import csv
 import numpy as np
 
+# Function for testing
+# Count how many spam emails are in the set
 def count_spam(dataset, dataset_name):
     spam = 0
     notspam = 0
@@ -15,7 +17,7 @@ def count_spam(dataset, dataset_name):
     print('notspam:', notspam)
     print()
 
-
+# Calculate the prior for each class in the dataset
 def calc_prior(dataset):
     spam_count = 0
     for i in range(0, len(dataset)):
@@ -39,7 +41,7 @@ def calc_mean_stddev(class_data):
     curr_stddev_list = np.delete(curr_stddev_list, -1)
     return curr_mean_list, curr_stddev_list
 
-
+# Separate the two classes in the dataset
 def separate_spam(dataset):
     spam_set= []
     nonspam_set = []
@@ -48,15 +50,16 @@ def separate_spam(dataset):
             spam_set.append(dataset[i])
         else:
             nonspam_set.append(dataset[i])
-    return spam_set, nonspam_set\
+    return spam_set, nonspam_set
 
-
+# Print the confusion matrix
 def create_matrix(list):
     print('Pred|Act Spam\tNonSpam')
     print('Spam\t', list[0], '\t', list[1])
     print('NonSpam\t', list[2], '\t', list[3])
 
-
+# Calculates the probabilities of each class and determines which has the larger value
+# Return 1 for spam, 2 for nonspam
 def classifier(data_to_classify, dataset):
     spam_set, nonspam_set = separate_spam(dataset)
     spam_mean, spam_std = calc_mean_stddev(spam_set)
@@ -72,19 +75,21 @@ def classifier(data_to_classify, dataset):
     for feature in range(0, len(nonspam_set[0])-1):
         nonspam_prob_list.append(math_calculation(data_to_classify[feature], nonspam_mean[feature], nonspam_std[feature]))
 
+    # log each result to prevent underflow from occuring
+    # first check if item is 0, if it is, make it a very small number
     if(spam_prior == 0):
-        spam_prior = 10**-10
+        spam_prior = 10**-300
     total_spam_prob = np.log10(spam_prior)
 
     for item in range(0, len(spam_prob_list)):
         if(spam_prob_list[item]==0):
-            spam_prob_list[item] = 10**-10
+            spam_prob_list[item] = 10**-300
         total_spam_prob += np.log10(spam_prob_list[item])
 
     total_nonspam_prob = np.log10(nonspam_prior)
     for item in range(0, len(nonspam_prob_list)):
         if (nonspam_prob_list[item] == 0):
-            nonspam_prob_list[item] = 10 ** -10
+            nonspam_prob_list[item] = 10**-300
         total_nonspam_prob += np.log10(nonspam_prob_list[item])
 
     if(total_spam_prob >= total_nonspam_prob):
@@ -92,6 +97,7 @@ def classifier(data_to_classify, dataset):
     else:
         return 0
 
+# Math needed using new feature value, mean, and standard deviation
 def math_calculation(value, mean, std):
     first_value = (1/(np.sqrt(2*np.pi)*std))
     upper_e_value = (-((value-mean)**2))
@@ -101,10 +107,9 @@ def math_calculation(value, mean, std):
     final_value = first_value*second_value
     return final_value
 
-
 # Read the training data and put it into data variable
 data = []
-file = open(r'C:\Users\Andrew\Desktop\spambase\spambase.data')
+file = open(r'spambase.data')
 reader = csv.reader(file)
 next(reader, None)
 for row in reader:
@@ -126,30 +131,6 @@ for i in range(1812, 3206):
 for i in range(3206, 4600):
     test_data.append(data[i])
 
-
-# testset = [
-#     [3.0, 5.1, 1],
-#     [4.1, 6.3, 1],
-#     [7.2, 9.8, 1],
-#     [2.0, 1.1, 0],
-#     [4.1, 2.0, 0],
-#     [8.1, 9.4, 0]
-# ]
-#
-# test_set_pos = [
-#     [3.0, 5.1, 1],
-#     [4.1, 6.3, 1],
-#     [7.2, 9.8, 1]
-# ]
-#
-# test_set_neg = [
-#     [2.0, 1.1, 0],
-#     [4.1, 2.0, 0],
-#     [8.1, 9.4, 0]
-# ]
-# testclass = classifier([5.2, 6.3, 1], testset)
-# print(testclass)
-
 test_correct = 0
 
 confusion_matrix = np.zeros((4))  # 0: spam-spam, 1: spam-nonspam, 2: nonspam-spam, 3:nonspam-nonspam, --actual-predicted
@@ -167,11 +148,9 @@ for row in range(0, len(test_data)):
         else:
             confusion_matrix[1] += 1
 
-
 create_matrix(confusion_matrix)
 
 print()
 print(test_correct, '/', len(test_data))
 test_accuracy = (test_correct / len(test_data)) * 100
 print(test_accuracy)
-
